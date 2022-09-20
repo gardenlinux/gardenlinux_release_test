@@ -1,0 +1,47 @@
+name: release
+on:
+  workflow_dispatch:
+    inputs:
+      type:
+        type: choice
+        default: beta
+        options:
+        - beta
+        - stable
+      version:
+        required: true
+        type: string
+      commit:
+        required: true
+        type: string
+jobs:
+  create_release:
+    runs-on: ec2-gardenlinux-amd64
+    steps:
+      - uses: actions/checkout@v2
+      - run: .github/workflows/release.sh ${{ secrets.GITHUB_TOKEN }} ${{ github.repository }} create "${{ inputs.type == 'beta' && 'beta_' || '' }}$version" "$version" > .github_release
+      - uses: actions/upload-artifact@v2
+        with:
+          name: release
+          path: .github_release
+  # upload_to_release:
+  #   if: github.ref == 'refs/heads/main'
+  #   needs: create_release
+  #   runs-on: ubuntu-latest
+  #   strategy:
+  #     matrix:
+  #       architecture: [ amd64, arm64 ]
+  #       target: [ kvm, metal, gcp, aws, azure, ali, openstack, vmware, pxe ]
+  #       modifier: [ "", "-dev" ]
+  #   steps:
+  #     - uses: actions/checkout@v2
+  #     - uses: actions/download-artifact@v2
+  #       with:
+  #         name: release
+  #     - uses: actions/download-artifact@v2
+  #       with:
+  #         name: build-${{ matrix.architecture }}-${{ matrix.target }}${{ matrix.modifier }}
+  #         path: .build
+  #     - run: |
+  #         release="$(cat .github_release)"
+  #         find .build -type f | .github/workflows/release.sh ${{ secrets.GITHUB_TOKEN }} ${{ github.repository }} upload "$release"
