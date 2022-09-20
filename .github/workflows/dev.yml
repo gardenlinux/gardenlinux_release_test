@@ -1,7 +1,11 @@
 name: dev
 on: [ push, pull_request ]
 jobs:
-  build:
-    uses: ./.github/workflows/build.yml
-    with:
-      version: today
+  skip:
+    runs-on: ec2-gardenlinux-amd64
+    steps:
+      - run: true
+  # build:
+  #   uses: ./.github/workflows/build.yml
+  #   with:
+  #     version: today
